@@ -180,22 +180,23 @@ def main():
                         
                         insert_df['contact'] = uploaded_df[contacts_column].values
                         
+                        
                         if names_column is not None:
                             insert_df['customer_name'] = uploaded_df[names_column].values
                         else:
                             insert_df['customer_name'] = ''
-                        
+                                                
                         if email_column is not None:
                             insert_df['customer_email'] = uploaded_df[email_column].values
                         else:
                             insert_df['customer_email'] = ''
-                            
-                        if email_column is not None:
+                                                
+                        if address_column is not None:
                             insert_df['customer_address'] = uploaded_df[address_column].values
                         else:
                             insert_df['customer_address'] = ''
                             
-                        if email_column is not None:
+                        if domain_column is not None:
                             insert_df['customer_domain'] = uploaded_df[domain_column].values
                         else:
                             insert_df['customer_domain'] = ''
@@ -210,7 +211,7 @@ def main():
                         insert_df['call_status'] = 'pending'
                                                 
                         insert_df['id'] = [ str(uuid.uuid4()) for _ in range(len(uploaded_df))]
-                                            
+                                                                    
                         #.. Insert uploaded data to database      
                         with Sender('43.204.237.29', 9009) as sender:
                             sender.dataframe(insert_df, table_name='contacts_smartcall')
@@ -477,59 +478,61 @@ def main():
                 if 'cust_info_df' not in st.session_state:
                     st.session_state.cust_info_df = pd.DataFrame( columns=['contact', 'customer_name', 'customer_email', 'customer_address', 'customer_domain'])
                                                     
-                col200, col201 = st.columns([1, 1])
-    
-                with col200:
-                    st.subheader(':green[Customer Info]', divider='green')
+                
+                st.subheader(':green[Customer Info]', divider='green')
+                
+                st.table( st.session_state.cust_info_df[ ['contact', 'customer_name', 'customer_email', 'customer_address', 'customer_domain'] ] )
+                               
+                url = st.session_state.cust_info_df.customer_domain[0]
+                
+                customer_url_w_protocol = 'http://' + url if not url.startswith(('http://', 'https://')) else url
+                
+                st.markdown(f"[Visit Domain]({customer_url_w_protocol})", unsafe_allow_html=True)
                     
-                    st.write( st.session_state.cust_info_df[ ['contact', 'customer_name', 'customer_email', 'customer_address', 'customer_domain'] ] )
+                st.subheader(':green[Operations]', divider='green')
                 
-                with col201:
+                col201_0, col201_1, col201_2 = st.columns([1, 2, 1])
+            
+                with col201_0:
                     
-                    st.subheader(':green[Operations]', divider='green')
-                
-                    col201_0, col201_1, col201_2 = st.columns([1, 2, 1])
-                
-                    with col201_0:
-                        
-                        st.write('')
-                        
-                        st.write('')
-                        
-                        start_call_button = st.button("Start Call", use_container_width=True)
-                                        
-                        # Add callback to reset call_feedback using session state
-                        if start_call_button:
-                            
-                            st.session_state.call_feedback = 'None'
-                            
-                            st.session_state.cust_info_df, skype_uri = utilities.next_iteration( st.session_state.org_id, st.session_state.username )
-                                                                                    
-                            if len( st.session_state.cust_info_df ) == 0:
-                                st.markdown( "No more numbers to call !" )
-                            else:
-                                st.markdown(f'<meta http-equiv="refresh" content="0;URL={skype_uri}">', unsafe_allow_html=True)
-                                                
-                    with col201_1:
-                        # Display the dropdown with the updated call_feedback from session state
-                        st.session_state.call_feedback = st.selectbox("Feedback", ['None', 'Not Available', 'Rejected', 'Not Interested', 'Call back', 'Answering Machine'])
+                    st.write('')
+                    
+                    st.write('')
+                    
+                    start_call_button = st.button("Start Call", use_container_width=True)
                                     
-                    with col201_2:
-                        st.write('')
-                        st.write('')
-                        feedback_button = st.button("Submit Feedback", use_container_width=True)
+                    # Add callback to reset call_feedback using session state
+                    if start_call_button:
                         
-                        if feedback_button:
+                        st.session_state.call_feedback = 'None'
+                        
+                        st.session_state.cust_info_df, skype_uri = utilities.next_iteration( st.session_state.org_id, st.session_state.username )
+                                                                                
+                        if len( st.session_state.cust_info_df ) == 0:
+                            st.markdown( "No more numbers to call !" )
+                        else:
+                            st.markdown(f'<meta http-equiv="refresh" content="0;URL={skype_uri}">', unsafe_allow_html=True)
+                                            
+                with col201_1:
+                    # Display the dropdown with the updated call_feedback from session state
+                    st.session_state.call_feedback = st.selectbox("Feedback", ['None', 'Not Available', 'Rejected', 'Not Interested', 'Call back', 'Answering Machine'])
+                                
+                with col201_2:
+                    st.write('')
+                    st.write('')
+                    feedback_button = st.button("Submit Feedback", use_container_width=True)
+                    
+                    if feedback_button:
+                        
+                        if len( st.session_state.cust_info_df ) > 0:
+                                                        
+                            call_update_status_query = f"UPDATE contacts_smartcall SET call_status = 'complete', action = '{st.session_state.call_feedback}' WHERE id = '{st.session_state.cust_info_df.id[0]}' AND org_id = '{st.session_state.org_id}'"
                             
-                            if len( st.session_state.cust_info_df ) > 0:
-                                                            
-                                call_update_status_query = f"UPDATE contacts_smartcall SET call_status = 'complete', action = '{st.session_state.call_feedback}' WHERE id = '{st.session_state.cust_info_df.id[0]}' AND org_id = '{st.session_state.org_id}'"
-                                
-                                utilities.execute_sql_query(call_update_status_query)
-                                
-                                st.markdown( f"Status Updated: {st.session_state.call_feedback}" )
-                                
-                                logger.info(f"Finished Calling and status updated : {st.session_state.call_feedback}")
+                            utilities.execute_sql_query(call_update_status_query)
+                            
+                            st.markdown( f"Status Updated: {st.session_state.call_feedback}" )
+                            
+                            logger.info(f"Finished Calling and status updated : {st.session_state.call_feedback}")
                                 
                 st.subheader(':green[Metrics]', divider='green')
                 

@@ -41,6 +41,7 @@ def sql_read_query_df( query ):
     
     return df
 
+
 #@st.cache_data(max_entries=50, show_spinner='Loading ...')
 def execute_sql_query( query ):
     conn, cursor = connect_questdb()
@@ -114,25 +115,27 @@ def get_number_to_call( org_id ):
 def next_iteration( org_id, agent_username ):
     
     cust_info_df_fetched = get_number_to_call(org_id)
-            
-    current_datetime = datetime.now()
-    
-    called_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")
-    
-    call_date = datetime.strptime(called_datetime, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y-%m-%d")
-    
-    # Update agent information to avoid multiple agents calling the same number
-    
-    agent_update_query = f"UPDATE contacts_smartcall SET agent_username = '{agent_username}', called_datetime = '{called_datetime}', call_date = '{call_date}' WHERE id = '{cust_info_df_fetched.id[0]}' AND org_id = '{org_id}'"
-        
-    execute_sql_query(agent_update_query)
-    
-    logger.info(f"contact: {cust_info_df_fetched.contact[0]}, Agent: {agent_username}, org_id: {org_id}, id : {cust_info_df_fetched.id[0]}")
     
     if len( cust_info_df_fetched ) == 0:
+        
         logger.info('No number to call')
+        
+        skype_uri = 'No number to call'
+        
     else:
-        #skype_uri = call_number( str( cust_info_df_fetched.num_to_call[0] ) )
+        current_datetime = datetime.now()
+        
+        called_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")
+        
+        call_date = datetime.strptime(called_datetime, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y-%m-%d")
+        
+        # Update agent information to avoid multiple agents calling the same number
+        
+        agent_update_query = f"UPDATE contacts_smartcall SET agent_username = '{agent_username}', called_datetime = '{called_datetime}', call_date = '{call_date}' WHERE id = '{cust_info_df_fetched.id[0]}' AND org_id = '{org_id}'"
+            
+        execute_sql_query(agent_update_query)
+        
+        logger.info(f"contact: {cust_info_df_fetched.contact[0]}, Agent: {agent_username}, org_id: {org_id}, id : {cust_info_df_fetched.id[0]}")
         
         skype_uri = f"skype:{str( cust_info_df_fetched.contact[0] )}?call"
         
