@@ -94,7 +94,7 @@ def main():
                                             
                         call_status_grouped_df = utilities.sql_read_query_df(f"SELECT call_status, COUNT(*) AS num_calls FROM contacts_smartcall WHERE org_id = '{state.org_id}' GROUP BY call_status;")
                     
-                        st.write( call_status_grouped_df )
+                        st.table( call_status_grouped_df )
                         
                     with col02:
                         st.subheader('Calls per agent', divider='orange')
@@ -138,7 +138,7 @@ def main():
                 st.subheader('Upload Contacts', divider='orange')
         
                 # Input fields
-                col1, col2, col3_1, col3_2, col3_3, col3_4, col3_5, col3_6 = st.columns([3, 2, 2, 2, 2, 2, 2, 1.1])
+                col1, col2, col3_1, col3_2, col3_3, col3_4, col3_5 = st.columns([3, 2, 2, 2, 2, 2, 1])
                 
                 with col1:
                     uploaded_file = st.file_uploader("Upload contacts file", type=["csv", "xlsx"])
@@ -166,11 +166,8 @@ def main():
                 with col3_3:
                     address_column = st.selectbox("Address (Optional)", list( uploaded_df.columns ) if uploaded_file else [], index = None )
                 with col3_4:
-                    domain_column = st.selectbox("Domain (Optional)", list( uploaded_df.columns ) if uploaded_file else [], index = None )
+                    domain_column = st.selectbox("Domain (Optional)", list( uploaded_df.columns ) if uploaded_file else [], index = None )                                    
                 with col3_5:
-                    grouping_column = st.selectbox("Grouping (Optional)", list( uploaded_df.columns ) if uploaded_file else [], index = None )
-                    
-                with col3_6:
                     st.write('')
                     st.write('')
                     
@@ -201,21 +198,25 @@ def main():
                         else:
                             insert_df['customer_domain'] = ''
                         
-                        if grouping_column is not None:
-                            insert_df['grouping'] = uploaded_df[grouping_column].values
-                        else:
-                            insert_df['grouping'] = ''
                         
+                        insert_df['grouping'] = 'active'   #... By default data is active
+                                                
                         insert_df['org_id'] = state.org_id
                         
                         insert_df['call_status'] = 'pending'
                                                 
                         insert_df['id'] = [ str(uuid.uuid4()) for _ in range(len(uploaded_df))]
+                        
+                        # insert_df['file_id'] = utilities.generate_unique_id(10)
                                                                     
                         #.. Insert uploaded data to database      
                         with Sender('43.204.237.29', 9009) as sender:
                             sender.dataframe(insert_df, table_name='contacts_smartcall')
                         st.success('Data uploaded successfully!')
+                
+                #.... Data State ....
+                
+                st.subheader('Modify data state (Active/Stale)', divider='orange')
                 
                 #.... Create new agent logic
                 
@@ -277,24 +278,21 @@ def main():
                 
                 st.subheader('Configure Agent', divider='orange')
                 
-                col8, col9, col10_0, col10_1 = st.columns([2, 2, 2, 1])
+                col8, col9, col10 = st.columns([2, 2, 2])
                 
                 org_agents_df = utilities.sql_read_query_df(f"select * from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
                 
-                unique_groups_list_0 = list( org_agents_df.grouping.unique() )
+                # unique_groups_list_0 = list( org_agents_df.grouping.unique() )
                 
-                unique_groups_list = list(set(i for unique_groups_list_0 in [item.split(',') for item in unique_groups_list_0] for i in unique_groups_list_0))
+                # unique_groups_list = list(set(i for unique_groups_list_0 in [item.split(',') for item in unique_groups_list_0] for i in unique_groups_list_0))
                                 
                 with col8:
                     agent_combination = st.selectbox("Agent Combination", list( org_agents_df.combination ), key = 'agent_combination', index = None )
                             
                 with col9:
                     agent_new_status = st.selectbox("Status", ['active', 'inactive'], key = 'agent_new_status', index = None )
-                    
-                with col10_0:
-                    agent_selected_groups = st.multiselect("Groups", unique_groups_list, key = 'agent_selected_groups' )
                 
-                with col10_1:
+                with col10:
                     st.write('')
                     st.write('')
                     
