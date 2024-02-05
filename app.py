@@ -482,12 +482,14 @@ def main():
                 st.subheader(':green[Customer Info]', divider='green')
                 
                 st.table( st.session_state.cust_info_df[ ['contact', 'customer_name', 'customer_email', 'customer_address', 'customer_domain'] ] )
+                
+                if len( st.session_state.cust_info_df ) > 0:
                                
-                url = st.session_state.cust_info_df.customer_domain[0]
-                
-                customer_url_w_protocol = 'http://' + url if not url.startswith(('http://', 'https://')) else url
-                
-                st.markdown(f"[Visit Domain]({customer_url_w_protocol})", unsafe_allow_html=True)
+                    url = st.session_state.cust_info_df.customer_domain[0]
+                    
+                    customer_url_w_protocol = 'http://' + url if not url.startswith(('http://', 'https://')) else url
+                    
+                    st.markdown(f"[Visit Domain]({customer_url_w_protocol})", unsafe_allow_html=True)
                     
                 st.subheader(':green[Operations]', divider='green')
                 
