@@ -63,7 +63,7 @@ def fetchone_sql_query( fetch_one_query ):
     
     return fetch_result
     
-@st.cache_data( show_spinner='Loading ...')
+@st.cache_data( ttl='2hr', show_spinner='Loading ...')
 def valid_user( combination ):
     
     value_0 = fetchone_sql_query( f""" SELECT 1 FROM credentials_smartcall WHERE combination = '{combination}' """ )
@@ -72,7 +72,7 @@ def valid_user( combination ):
     
     return value
     
-@st.cache_data( show_spinner='Loading ...')
+@st.cache_data( ttl='2hr', show_spinner='Loading ...')
 def login(username, password, org_id):
    
     combined_credentials = f"{username}__{password}__{org_id}"
