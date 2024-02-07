@@ -5,11 +5,11 @@ from logzero import logger
 from datetime import datetime
 import webbrowser
 import time
-import pyautogui
+#import pyautogui
 import logzero
 import streamlit as st
 
-call_button_image = "call_button.png"
+#call_button_image = "call_button.png"
 
 logzero.logfile("log.log")
 
