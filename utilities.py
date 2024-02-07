@@ -9,11 +9,6 @@ import pyautogui
 import logzero
 import streamlit as st
 
-import os
-
-os.environ['DISPLAY'] = ':0'
-
-
 #call_button_image = "call_button.png"
 
 logzero.logfile("log.log")
