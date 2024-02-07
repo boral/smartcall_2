@@ -5,7 +5,7 @@ from logzero import logger
 from datetime import datetime
 import webbrowser
 import time
-import pyautogui
+#import pyautogui
 import logzero
 import streamlit as st
 
@@ -151,10 +151,10 @@ def call_number(number):
         logger.info(skype_uri)
 
         # Open the Skype URI in a new tab of the default web browser
-        webbrowser.open_new_tab(skype_uri)
+        #webbrowser.open_new_tab(skype_uri)
         
         # Wait for a moment for the Skype app to open
-        time.sleep(5)
+        #time.sleep(5)
                 
         if (number[1:].isdigit() if number.startswith('+') else number.isdigit()) if number else False:
             # Use pyautogui to simulate a mouse click on the call button
@@ -162,17 +162,17 @@ def call_number(number):
             
             logger.info('Number is detected')
             
-            button_position = pyautogui.locateOnScreen(call_button_image, confidence=0.6)
+            #button_position = pyautogui.locateOnScreen(call_button_image, confidence=0.6)
             
-            logger.info(f"button_position: {button_position}")
+            #logger.info(f"button_position: {button_position}")
             
-            if button_position:
+            # if button_position:
                 
-                 logger.info('Before Click')
+            #     logger.info('Before Click')
                 
-                 pyautogui.click(button_position)
+            #     pyautogui.click(button_position)
                 
-                 logger.info('After Click')
+            #     logger.info('After Click')
 
         # Wait for the Enter key to be pressed before continuing to the next call
         #print("Press the Enter key to continue to the next call...")
