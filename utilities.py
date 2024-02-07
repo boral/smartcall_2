@@ -5,11 +5,11 @@ from logzero import logger
 from datetime import datetime
 import webbrowser
 import time
-import pyautogui
+#import pyautogui
 import logzero
 import streamlit as st
 
-call_button_image = "call_button.png"
+#call_button_image = "call_button.png"
 
 logzero.logfile("log.log")
 
@@ -94,10 +94,15 @@ def generate_unique_id( length ):
     return short_id
 
 def get_number_to_call( org_id ):
-   
+        
+    #num_to_call_results = fetchone_sql_query(f"""SELECT id, contact, customer_name, customer_email, customer_address, customer_domain FROM contacts_smartcall WHERE org_id = '{org_id}' AND call_status='pending' AND agent_username IS NULL""")
+    
+    
     num_to_call_results = sql_read_query_df(f"""SELECT id, contact, customer_name, customer_email, customer_address, customer_domain FROM contacts_smartcall WHERE org_id = '{org_id}' AND call_status='pending' AND agent_username IS NULL LIMIT 1""")
                
     if num_to_call_results is not None:
+        
+        #cust_info_df_fetched = pd.DataFrame( [num_to_call_results], columns=['contact_id', 'customer_domain', 'customer_name', 'customer_email', 'num_to_call', 'customer_address'] )
         
         cust_info_df_fetched = num_to_call_results
                 
@@ -149,7 +154,7 @@ def call_number(number):
         #webbrowser.open_new_tab(skype_uri)
         
         # Wait for a moment for the Skype app to open
-        time.sleep(5)
+        #time.sleep(5)
                 
         if (number[1:].isdigit() if number.startswith('+') else number.isdigit()) if number else False:
             # Use pyautogui to simulate a mouse click on the call button
@@ -165,9 +170,7 @@ def call_number(number):
                 
             #     logger.info('Before Click')
                 
-            #     #pyautogui.click(button_position)
-                
-            #     pyautogui.press('enter')
+            #     pyautogui.click(button_position)
                 
             #     logger.info('After Click')
 
