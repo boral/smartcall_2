@@ -1,3 +1,7 @@
+import os
+
+os.environ['DISPLAY'] = ':0'
+
 import psycopg2
 import uuid
 import pandas as pd
@@ -9,9 +13,6 @@ import pyautogui
 import logzero
 import streamlit as st
 
-import os
-
-os.environ['DISPLAY'] = ':0'
 
 
 #call_button_image = "call_button.png"
