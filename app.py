@@ -8,6 +8,10 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import time
 
+import os
+
+os.environ['DISPLAY'] = ':0'
+
 # ef5d909f
 
 import utilities
