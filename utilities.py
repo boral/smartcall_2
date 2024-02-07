@@ -151,7 +151,7 @@ def call_number(number):
         logger.info(skype_uri)
 
         # Open the Skype URI in a new tab of the default web browser
-        webbrowser.open_new_tab(skype_uri)
+        #webbrowser.open_new_tab(skype_uri)
         
         # Wait for a moment for the Skype app to open
         #time.sleep(5)
