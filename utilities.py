@@ -154,7 +154,7 @@ def call_number(number):
         webbrowser.open_new_tab(skype_uri)
         
         # Wait for a moment for the Skype app to open
-        time.sleep(5)
+        #time.sleep(5)
                 
         if (number[1:].isdigit() if number.startswith('+') else number.isdigit()) if number else False:
             # Use pyautogui to simulate a mouse click on the call button
