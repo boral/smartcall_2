@@ -7,7 +7,8 @@ import logzero
 import plotly.express as px
 from datetime import datetime, timedelta
 import time
-import pyautogui
+#import pyautogui
+import keyboard
 
 # ef5d909f
 
@@ -521,7 +522,9 @@ def main():
                             st.markdown(f'<meta http-equiv="refresh" content="0;URL={skype_uri}">', unsafe_allow_html=True)
                             time.sleep(5)
                             
-                            pyautogui.press('enter')
+                            keyboard.press_and_release('enter')
+                            
+                            #pyautogui.press('enter')
                                                                     
                 with col201_1:
                     # Display the dropdown with the updated call_feedback from session state
