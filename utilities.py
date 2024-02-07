@@ -19,7 +19,7 @@ def connect_questdb():
     connection_params = {
         "user": "admin",
         "password": "quest",
-        "host": "43.204.237.29",
+        "host": "13.126.180.220",
         "port": "8812",
         "database": "qdb"
     }
