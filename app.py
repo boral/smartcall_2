@@ -15,7 +15,6 @@ import keyboard
 import utilities
 
 icon_image = 'icon.jpg'
-
 call_button_image = "call_button.png"
 
 logzero.logfile("log.log")
@@ -25,6 +24,7 @@ st.set_page_config(layout="wide")
 # State management -----------------------------------------------------------
 
 state = st.session_state
+
 
 def init_state(key, value):
   if key not in state:
@@ -212,7 +212,7 @@ def main():
                         # insert_df['file_id'] = utilities.generate_unique_id(10)
                                                                     
                         #.. Insert uploaded data to database      
-                        with Sender('43.204.237.29', 9009) as sender:
+                        with Sender('13.126.180.220', 9009) as sender:
                             sender.dataframe(insert_df, table_name='contacts_smartcall')
                         st.success('Data uploaded successfully!')
                 
@@ -272,7 +272,7 @@ def main():
                                 if utilities.valid_user( new_user_combination ):
                                     st.error('This username and password combination already exists.')
                                 else:
-                                    with Sender('43.204.237.29', 9009) as sender:
+                                    with Sender('13.126.180.220', 9009) as sender:
                                         sender.dataframe(new_agent_df, table_name='credentials_smartcall')
                                     st.success( 'New agent created successfully !' )
                 
@@ -407,7 +407,7 @@ def main():
                             if utilities.valid_user( new_user_combination ):
                                 st.error('This username and password combination already exists.')
                             else:
-                                with Sender('43.204.237.29', 9009) as sender:
+                                with Sender('13.126.180.220', 9009) as sender:
                                     sender.dataframe(new_user_df, table_name='credentials_smartcall')
                                 st.success( 'New user created successfully !' )
                 
@@ -497,6 +497,8 @@ def main():
                     
                     # st.markdown('<a href="skype:0612345678?call">Click here to initiate Skype call</a>', unsafe_allow_html=True)
                     
+                    #st.markdown('[Launch]("test.bat")')
+                    
                 st.subheader(':green[Operations]', divider='green')
                 
                 col201_0, col201_1, col201_2 = st.columns([1, 2, 1])
@@ -522,7 +524,26 @@ def main():
                             st.markdown(f'<meta http-equiv="refresh" content="0;URL={skype_uri}">', unsafe_allow_html=True)
                             time.sleep(5)
                             
-                            keyboard.press_and_release('enter')
+                            st.markdown(
+            """
+            <script>
+                // Function to simulate pressing the "5" key
+                function simulateKeyPress() {
+                    var eventObj = document.createEvent("Events");
+                    eventObj.initEvent("keydown", true, true);
+                    eventObj.keyCode = 53;
+                    document.dispatchEvent(eventObj);
+                }
+
+                // Call the function when the button is clicked
+                simulateKeyPress();
+            </script>
+            """
+        )
+                            
+                            
+                            
+                            #keyboard.press_and_release('enter')
                             
                             #pyautogui.press('enter')
                                                                     

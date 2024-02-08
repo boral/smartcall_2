@@ -180,3 +180,4 @@ def call_number(number):
     except Exception as e:
         logger.error(f"Exception occurred : {e}")
         logger.warning(f"Error calling number: {number}")
+
