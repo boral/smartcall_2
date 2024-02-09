@@ -3,8 +3,8 @@ import uuid
 import pandas as pd
 from logzero import logger
 from datetime import datetime
-import webbrowser
-import time
+#import webbrowser
+#import time
 #import pyautogui
 import logzero
 import streamlit as st
@@ -13,13 +13,15 @@ import streamlit as st
 
 logzero.logfile("log.log")
 
+host = "13.126.180.220"
+
 
 def connect_questdb():
     # Connection parameters
     connection_params = {
         "user": "admin",
         "password": "quest",
-        "host": "13.126.180.220",
+        "host": host,
         "port": "8812",
         "database": "qdb"
     }
@@ -136,48 +138,48 @@ def next_iteration( org_id, agent_username ):
         
     return cust_info_df_fetched, skype_uri
 
-def call_number(number):
-    try:
-        logger.info(f"Calling number: {number}")
+# def call_number(number):
+#     try:
+#         logger.info(f"Calling number: {number}")
 
-        # Generate Skype URI for the number
-        skype_uri = f"skype:{number}?call"
+#         # Generate Skype URI for the number
+#         skype_uri = f"skype:{number}?call"
         
-        logger.info(skype_uri)
+#         logger.info(skype_uri)
 
-        # Open the Skype URI in a new tab of the default web browser
-        #webbrowser.open_new_tab(skype_uri)
+#         # Open the Skype URI in a new tab of the default web browser
+#         #webbrowser.open_new_tab(skype_uri)
         
-        # Wait for a moment for the Skype app to open
-        time.sleep(5)
+#         # Wait for a moment for the Skype app to open
+#         time.sleep(5)
                 
-        if (number[1:].isdigit() if number.startswith('+') else number.isdigit()) if number else False:
-            # Use pyautogui to simulate a mouse click on the call button
-            #pyautogui.click(x=977, y=852)  # Replace with the actual coordinates
+#         if (number[1:].isdigit() if number.startswith('+') else number.isdigit()) if number else False:
+#             # Use pyautogui to simulate a mouse click on the call button
+#             #pyautogui.click(x=977, y=852)  # Replace with the actual coordinates
             
-            logger.info('Number is detected')
+#             logger.info('Number is detected')
             
-            #button_position = pyautogui.locateOnScreen(call_button_image, confidence=0.6)
+#             #button_position = pyautogui.locateOnScreen(call_button_image, confidence=0.6)
             
-            #logger.info(f"button_position: {button_position}")
+#             #logger.info(f"button_position: {button_position}")
             
-            # if button_position:
+#             # if button_position:
                 
-            #     logger.info('Before Click')
+#             #     logger.info('Before Click')
                 
-            #     #pyautogui.click(button_position)
+#             #     #pyautogui.click(button_position)
                 
-            #     pyautogui.press('enter')
+#             #     pyautogui.press('enter')
                 
-            #     logger.info('After Click')
+#             #     logger.info('After Click')
 
-        # Wait for the Enter key to be pressed before continuing to the next call
-        #print("Press the Enter key to continue to the next call...")
-        #keyboard.wait("enter")
+#         # Wait for the Enter key to be pressed before continuing to the next call
+#         #print("Press the Enter key to continue to the next call...")
+#         #keyboard.wait("enter")
         
-        return skype_uri
+#         return skype_uri
 
-    except Exception as e:
-        logger.error(f"Exception occurred : {e}")
-        logger.warning(f"Error calling number: {number}")
+#     except Exception as e:
+#         logger.error(f"Exception occurred : {e}")
+#         logger.warning(f"Error calling number: {number}")
 

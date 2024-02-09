@@ -7,19 +7,19 @@ import logzero
 import plotly.express as px
 from datetime import datetime, timedelta
 import time
-#import pyautogui
-import keyboard
+
 
 # ef5d909f
 
 import utilities
 
 icon_image = 'icon.jpg'
-call_button_image = "call_button.png"
 
 logzero.logfile("log.log")
 
 st.set_page_config(layout="wide")
+
+host = "13.126.180.220"
 
 # State management -----------------------------------------------------------
 
@@ -212,7 +212,7 @@ def main():
                         # insert_df['file_id'] = utilities.generate_unique_id(10)
                                                                     
                         #.. Insert uploaded data to database      
-                        with Sender('13.126.180.220', 9009) as sender:
+                        with Sender(host, 9009) as sender:
                             sender.dataframe(insert_df, table_name='contacts_smartcall')
                         st.success('Data uploaded successfully!')
                 
@@ -272,7 +272,7 @@ def main():
                                 if utilities.valid_user( new_user_combination ):
                                     st.error('This username and password combination already exists.')
                                 else:
-                                    with Sender('13.126.180.220', 9009) as sender:
+                                    with Sender( host, 9009) as sender:
                                         sender.dataframe(new_agent_df, table_name='credentials_smartcall')
                                     st.success( 'New agent created successfully !' )
                 
@@ -407,7 +407,7 @@ def main():
                             if utilities.valid_user( new_user_combination ):
                                 st.error('This username and password combination already exists.')
                             else:
-                                with Sender('13.126.180.220', 9009) as sender:
+                                with Sender( host, 9009) as sender:
                                     sender.dataframe(new_user_df, table_name='credentials_smartcall')
                                 st.success( 'New user created successfully !' )
                 
@@ -490,18 +490,10 @@ def main():
                     customer_url_w_protocol = 'http://' + url if not url.startswith(('http://', 'https://')) else url
                     
                     st.markdown(f"[Visit Domain]({customer_url_w_protocol})", unsafe_allow_html=True)
-                    
-                    # st.markdown("[Skype URI](skype:0612345678?call)")
-                    
-                    # st.markdown("[Skype URI2](im://call?id=0612345678)")
-                    
-                    # st.markdown('<a href="skype:0612345678?call">Click here to initiate Skype call</a>', unsafe_allow_html=True)
-                    
-                    #st.markdown('[Launch]("test.bat")')
-                    
+                                        
                 st.subheader(':green[Operations]', divider='green')
                 
-                col201_0, col201_1, col201_2 = st.columns([1, 2, 1])
+                col201_0, col201_1, col201_2, col201_3 = st.columns([1, 1, 2, 1])
             
                 with col201_0:
                     
@@ -522,41 +514,30 @@ def main():
                             st.markdown( "No more numbers to call !" )
                         else:
                             st.markdown(f'<meta http-equiv="refresh" content="0;URL={skype_uri}">', unsafe_allow_html=True)
-                            time.sleep(5)
                             
-                            st.markdown(
-            """
-            <script>
-                // Function to simulate pressing the "5" key
-                function simulateKeyPress() {
-                    var eventObj = document.createEvent("Events");
-                    eventObj.initEvent("keydown", true, true);
-                    eventObj.keyCode = 53;
-                    document.dispatchEvent(eventObj);
-                }
-
-                // Call the function when the button is clicked
-                simulateKeyPress();
-            </script>
-            """
-        )
-                            
-                            
-                            
-                            #keyboard.press_and_release('enter')
-                            
-                            #pyautogui.press('enter')
-                                                                    
                 with col201_1:
+                    
+                    st.write('')
+                    
+                    st.write('')
+                    
+                    pause_button = st.button("Pause", use_container_width=True)
+                    
+                with col201_2:
                     # Display the dropdown with the updated call_feedback from session state
                     st.session_state.call_feedback = st.selectbox("Feedback", ['None', 'Not Available', 'Rejected', 'Not Interested', 'Call back', 'Answering Machine'])
-                                
-                with col201_2:
+                    
+                with col201_3:
+                    
                     st.write('')
+                    
                     st.write('')
+                    
                     feedback_button = st.button("Submit Feedback", use_container_width=True)
                     
-                    if feedback_button:
+                    if feedback_button or pause_button:
+                        
+                        #... Submitting Feedback ...
                         
                         if len( st.session_state.cust_info_df ) > 0:
                                                         
@@ -567,6 +548,19 @@ def main():
                             st.markdown( f"Status Updated: {st.session_state.call_feedback}" )
                             
                             logger.info(f"Finished Calling and status updated : {st.session_state.call_feedback}")
+                            
+                        #... Calling next number...
+                        
+                        if not pause_button:
+                        
+                            st.session_state.cust_info_df, skype_uri = utilities.next_iteration( st.session_state.org_id, st.session_state.username )
+                                                                                    
+                            if len( st.session_state.cust_info_df ) == 0:
+                                st.markdown( "No more numbers to call !" )
+                            else:
+                                st.markdown(f'<meta http-equiv="refresh" content="0;URL={skype_uri}">', unsafe_allow_html=True)
+                            
+                        print( pause_button )
                                 
                 st.subheader(':green[Metrics]', divider='green')
                 
