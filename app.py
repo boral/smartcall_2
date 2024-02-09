@@ -521,7 +521,7 @@ def main():
                     
                     st.write('')
                     
-                    pause_button = st.button("Pause", use_container_width=True)
+                    pause_button = st.button("Submit Feedback & Pause", use_container_width=True)
                     
                 with col201_2:
                     # Display the dropdown with the updated call_feedback from session state
@@ -533,7 +533,7 @@ def main():
                     
                     st.write('')
                     
-                    feedback_button = st.button("Submit Feedback", use_container_width=True)
+                    feedback_button = st.button("Submit Feedback & Next Call", use_container_width=True)
                     
                     if feedback_button or pause_button:
                         
