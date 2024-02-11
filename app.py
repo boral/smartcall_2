@@ -173,7 +173,9 @@ def main():
                     st.write('')
                     st.write('')
                     
-                    if st.button("Upload", disabled=(uploaded_file is None or not contacts_column)):
+                    upload_file_button = st.button("Upload", disabled=(uploaded_file is None or not contacts_column))
+                    
+                    if upload_file_button:
                         
                         insert_df = pd.DataFrame(columns=['id', 'contact', 'customer_name', 'customer_email', 'customer_address', 'customer_domain', 'call_status', 'org_id'], dtype=str)
                         
@@ -224,7 +226,11 @@ def main():
                 
                 col04_1, col04_2, col04_3 = st.columns([2, 2, 1])
                 
-                contacts_smartcall2_df = utilities.sql_read_query_df(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
+                if upload_file_button:
+                
+                    contacts_smartcall2_df = utilities.sql_read_query_df(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
+                else:
+                    contacts_smartcall2_df = utilities.sql_read_query_df_cached(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
                 
                 with col04_1:
                     selected_file_id = st.selectbox("File ID", set( contacts_smartcall2_df.file_id ), key = 'file_id', index = None )
@@ -283,7 +289,9 @@ def main():
                     st.write('')
                     st.write('')
                     
-                    if st.button("Create New Agent"):
+                    create_new_agent_button = st.button("Create New Agent")
+                    
+                    if create_new_agent_button:
                         if not ( new_agent_name and new_agent_username and new_agent_password ):
                             st.markdown("<p style='color: red;'>Please provide all inputs.</p>", unsafe_allow_html=True)
                         else:
@@ -328,7 +336,11 @@ def main():
                 
                 col8, col9, col10 = st.columns([2, 2, 2])
                 
-                org_agents_df = utilities.sql_read_query_df(f"select combination from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
+                if create_new_agent_button:
+                
+                    org_agents_df = utilities.sql_read_query_df(f"select combination from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
+                else:
+                    org_agents_df = utilities.sql_read_query_df_cached(f"select combination from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
                 
                 # unique_groups_list_0 = list( org_agents_df.grouping.unique() )
                 

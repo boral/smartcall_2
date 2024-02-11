@@ -33,8 +33,17 @@ def connect_questdb():
     
     return conn, cursor
 
-#@st.cache_data(max_entries=50, show_spinner='Loading ...')
 def sql_read_query_df( query ):
+    conn, cursor = connect_questdb()
+    
+    df = pd.read_sql_query(query,conn)
+    
+    conn.close()
+    
+    return df
+
+@st.cache_data(max_entries=50, show_spinner='Loading ...')
+def sql_read_query_df_cached( query ):
     conn, cursor = connect_questdb()
     
     df = pd.read_sql_query(query,conn)
