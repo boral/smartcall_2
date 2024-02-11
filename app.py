@@ -5,7 +5,7 @@ import uuid
 from logzero import logger
 import logzero
 import plotly.express as px
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import time
 
 
@@ -74,7 +74,7 @@ def main():
     
     # If login is successful
     if state.login_successful:
-        
+                
         logged_user_combination = f"{state.username}__{state.password}__{state.org_id}"
         
         id_status = utilities.fetchone_sql_query(f""" SELECT status FROM credentials_smartcall WHERE combination = '{logged_user_combination}' """)
@@ -92,27 +92,27 @@ def main():
                 if refresh_metrics_value:
                 
                     with col01:
-                        st.subheader('Call status', divider='orange')
+                        st.subheader(':green[Call status]', divider='orange')
                                             
-                        call_status_grouped_df = utilities.sql_read_query_df(f"SELECT call_status, COUNT(*) AS num_calls FROM contacts_smartcall WHERE org_id = '{state.org_id}' GROUP BY call_status;")
+                        call_status_grouped_df = utilities.sql_read_query_df(f"SELECT call_status, COUNT(*) AS num_calls FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY call_status;")
                     
                         st.table( call_status_grouped_df )
                         
                     with col02:
-                        st.subheader('Calls per agent', divider='orange')
+                        st.subheader(':green[Calls per agent]', divider='orange')
                         
-                        agent_grouped_df = utilities.sql_read_query_df(f"SELECT agent_username, call_date, COUNT(*) AS num_calls FROM contacts_smartcall WHERE org_id = '{state.org_id}' GROUP BY agent_username, call_date ORDER BY agent_username, call_date;")
+                        agent_grouped_df = utilities.sql_read_query_df(f"SELECT agent_username, call_date, COUNT(*) AS num_calls FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY agent_username, call_date ORDER BY agent_username, call_date;")
                     
                         st.write( agent_grouped_df )
                         
                     with col03:
-                        st.subheader('Call action', divider='orange')
+                        st.subheader(':green[Call action]', divider='orange')
                         
-                        actions_grouped_df = utilities.sql_read_query_df(f"SELECT action, COUNT(*) AS num_actions FROM contacts_smartcall WHERE org_id = '{state.org_id}' GROUP BY action;")
+                        actions_grouped_df = utilities.sql_read_query_df(f"SELECT call_action, COUNT(*) AS num_actions FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY call_action;")
                     
                         st.write( actions_grouped_df )
                         
-                    st.subheader('Graphs', divider='green')
+                    st.subheader(':green[Graphs]', divider='green')
                     
                     col04, col05, col06 = st.columns([2,3,3])
                     
@@ -124,7 +124,7 @@ def main():
                         
                     with col05:
                         
-                        agents_num_call_df = utilities.sql_read_query_df(f"SELECT agent_username, COUNT(*) AS num_calls FROM contacts_smartcall WHERE org_id = '{state.org_id}' GROUP BY agent_username ORDER BY agent_username;")
+                        agents_num_call_df = utilities.sql_read_query_df(f"SELECT agent_username, COUNT(*) AS num_calls FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY agent_username ORDER BY agent_username;")
                     
                         agent_calls_graph = px.bar(agents_num_call_df.dropna(subset=['agent_username']), x='agent_username', y='num_calls', title = "Calls per agent", text = 'num_calls', width = 500, labels = { 'agent_username': 'Agents', 'num_calls': 'Number of Calls' } )
                                     
@@ -133,11 +133,11 @@ def main():
                                             
                     with col06:
                     
-                        actions_graph = px.bar(actions_grouped_df.dropna(subset=['action']), x='action', y='num_actions', title = "Actions for various calls", text = 'num_actions', width = 500, labels = { 'action': 'Action Type', 'num_actions': 'Number of Actions' } )
+                        actions_graph = px.bar(actions_grouped_df.dropna(subset=['call_action']), x='call_action', y='num_actions', title = "Actions for various calls", text = 'num_actions', width = 500, labels = { 'call_action': 'Action Type', 'num_actions': 'Number of Actions' } )
                                     
                         st.plotly_chart(actions_graph)
                 
-                st.subheader('Upload Contacts', divider='orange')
+                st.subheader(':green[Upload contacts]', divider='orange')
         
                 # Input fields
                 col1, col2, col3_1, col3_2, col3_3, col3_4, col3_5 = st.columns([3, 2, 2, 2, 2, 2, 1])
@@ -146,7 +146,7 @@ def main():
                     uploaded_file = st.file_uploader("Upload contacts file", type=["csv", "xlsx"])
                     
                 if uploaded_file is not None:
-                    st.subheader("Uploaded File (first 50 rows shown):")
+                    st.subheader(":green[Uploaded File (first 50 rows shown):]")
                     # Check the file type and read accordingly
                     if uploaded_file.name.endswith(".csv"):
                         uploaded_df = pd.read_csv(uploaded_file, dtype=str)
@@ -201,28 +201,73 @@ def main():
                             insert_df['customer_domain'] = ''
                         
                         
-                        insert_df['grouping'] = 'active'   #... By default data is active
+                        insert_df['file_id'] = state.org_id + '_' + str( datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
+                        
+                        insert_df['file_status'] = 'active'   #... By default data is active
                                                 
                         insert_df['org_id'] = state.org_id
                         
                         insert_df['call_status'] = 'pending'
                                                 
-                        insert_df['id'] = [ str(uuid.uuid4()) for _ in range(len(uploaded_df))]
-                        
-                        # insert_df['file_id'] = utilities.generate_unique_id(10)
-                                                                    
+                        insert_df['id'] = [ str(uuid.uuid4()) for _ in range(len(uploaded_df)) ]
+                                                                                            
                         #.. Insert uploaded data to database      
                         with Sender(host, 9009) as sender:
-                            sender.dataframe(insert_df, table_name='contacts_smartcall')
+                            
+                            sender.dataframe(insert_df, table_name='contacts_smartcall_2')
+                            
                         st.success('Data uploaded successfully!')
                 
                 #.... Data State ....
                 
-                st.subheader('Modify data state (Active/Stale)', divider='orange')
+                st.subheader(':green[Mark file status]', divider='orange')
+                
+                col04_1, col04_2, col04_3 = st.columns([2, 2, 1])
+                
+                contacts_smartcall2_df = utilities.sql_read_query_df(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
+                
+                with col04_1:
+                    selected_file_id = st.selectbox("File ID", set( contacts_smartcall2_df.file_id ), key = 'file_id', index = None )
+                    
+                with col04_2:
+                    selected_file_status = st.selectbox("File Status", ['active', 'stale'], key = 'selected_file_status', index = None )
+                    
+                with col04_3:
+                    st.write('')
+                    st.write('')
+                    
+                    if st.button("Update File Status"):
+                        
+                        if not ( selected_file_id and selected_file_status ):
+                            st.markdown("<p style='color: red;'>Please provide all inputs.</p>", unsafe_allow_html=True)
+                        else:
+                            utilities.execute_sql_query( f"UPDATE contacts_smartcall_2 SET file_status = '{selected_file_status}' WHERE file_id = '{selected_file_id}'" )
+                           
+                        st.success( 'File status updated !' )
+                
+                # Display Files Info
+                
+                st.subheader(':green[Files Info]', divider='orange')
+                
+                files_info_df = utilities.sql_read_query_df( f"""SELECT file_id, file_status,
+                                                            
+                       COUNT(*) AS total_records,
+                       
+                       SUM(CASE WHEN call_status = 'pending' THEN 1 ELSE 0 END) AS calls_pending,
+                       
+                       SUM(CASE WHEN call_status = 'ongoing' THEN 1 ELSE 0 END) AS calls_ongoing,
+                       
+                       SUM(CASE WHEN call_status = 'complete' THEN 1 ELSE 0 END) AS calls_complete
+                       
+                FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY file_id, file_status;""" )
+                
+                if st.button("Display Files Info"):
+                    
+                    st.write( files_info_df )
                 
                 #.... Create new agent logic
                 
-                st.subheader('Create New Agent', divider='orange')
+                st.subheader(':green[Create new agent]', divider='orange')
                 
                 # Input fields
                 col4, col5, col6, col7 = st.columns([2, 2, 2, 1])
@@ -247,9 +292,9 @@ def main():
                             
                             org_max_agents = org_max_agents_df['max_active_agents'].iloc[0]
                             
-                            org_agents_df = utilities.sql_read_query_df(f"select * from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
+                            num_agents = utilities.sql_read_query_df(f"select COUNT(*) from credentials_smartcall where role = 'agent' AND stauts = 'active' AND org_id = '{state.org_id}'")
                             
-                            if len( org_agents_df ) == org_max_agents:
+                            if num_agents == org_max_agents:
                                 st.markdown("<p style='color: red;'>Maximum active agents limit is reached. Subscribe for more active agents addition.</p>", unsafe_allow_html=True)
                             else:
                             
@@ -274,15 +319,16 @@ def main():
                                 else:
                                     with Sender( host, 9009) as sender:
                                         sender.dataframe(new_agent_df, table_name='credentials_smartcall')
+                                        
                                     st.success( 'New agent created successfully !' )
                 
                 # Logic to enable or disable agent
                 
-                st.subheader('Configure Agent', divider='orange')
+                st.subheader(':green[Configure agent]', divider='orange')
                 
                 col8, col9, col10 = st.columns([2, 2, 2])
                 
-                org_agents_df = utilities.sql_read_query_df(f"select * from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
+                org_agents_df = utilities.sql_read_query_df(f"select combination from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
                 
                 # unique_groups_list_0 = list( org_agents_df.grouping.unique() )
                 
@@ -308,23 +354,23 @@ def main():
                 
                 # Display agent table
                 
-                st.subheader('Agents Table', divider='orange')
+                st.subheader(':green[Agents table]', divider='orange')
                 
-                if st.button( 'Refresh Agents Table' ):
+                if st.button( 'Display Agents Table' ):
     
-                    org_agents_df = utilities.sql_read_query_df(f"select * from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
+                    org_agents_df = utilities.sql_read_query_df(f"select name, username, password, org_id, role, combination, status, grouping, timestamp from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
                     
-                st.write( org_agents_df[['name', 'username', 'password', 'org_id', 'role', 'combination', 'status', 'grouping', 'timestamp']] )
+                    st.write( org_agents_df )
                 
                 #.... View existing contacts data ...
                 
-                st.subheader('Existing contacts data', divider='orange')
+                st.subheader(':green[Existing contacts data]', divider='orange')
                 
                 # Input fields
                 col11, col12, col13 = st.columns([2, 2, 1])
                             
                 with col11:
-                    from_date = st.date_input("From Date (GMT timezone)")            
+                    from_date = st.date_input("From Date (GMT timezone)", date.today() - timedelta(days=7) )            
                 with col12:
                     to_date = st.date_input("To Date (GMT timezone)")
                 
@@ -338,7 +384,7 @@ def main():
                         if to_date < from_date :
                             st.markdown("<p style='color: red;'>To Date cannot be earlier than From Date</p>", unsafe_allow_html=True)
                         else:
-                            filtered_contacts_df = utilities.sql_read_query_df( f"select * from contacts_smartcall where org_id = '{state.org_id}' AND timestamp >= '{from_date} 00:00:00' AND timestamp <= '{to_date} 23:59:59' ")
+                            filtered_contacts_df = utilities.sql_read_query_df( f"select * from contacts_smartcall_2 where org_id = '{state.org_id}' AND timestamp >= '{from_date} 00:00:00' AND timestamp <= '{to_date} 23:59:59' ")
                             
                 st.write( filtered_contacts_df )
                                         
@@ -349,24 +395,30 @@ def main():
                 col120_0, col120_1 = st.columns([3, 4])
                 
                 if admin_refresh_metrics_value:
+                    
+                    #..... Drop Table Partitions ....
+                    
+                    data_deletion_date = ( date.today() - timedelta( days = 10 ) ).strftime( '%Y-%m-%d' )
+                    
+                    utilities.execute_sql_query( f"ALTER TABLE contacts_smartcall_2 DROP PARTITION WHERE timestamp < to_timestamp( '{data_deletion_date}', 'yyyy-MM-dd');" )
                 
                     with col120_0:
-                        st.subheader('Agents per org', divider='orange')
+                        st.subheader(':green[Agents per org]', divider='orange')
                                             
                         agents_per_org_df = utilities.sql_read_query_df("SELECT org_id, status, COUNT(*) AS num_agents FROM credentials_smartcall WHERE role = 'agent' GROUP BY org_id, status ORDER BY org_id, status;")
                     
                         st.write( agents_per_org_df )
                         
                     with col120_1:
-                        st.subheader('Calls per agent per org', divider='orange')
+                        st.subheader(':green[Calls per agent per org]', divider='orange')
                         
-                        calls_per_agent_per_org_df = utilities.sql_read_query_df("SELECT org_id, agent_username, call_date, COUNT(*) AS num_calls FROM contacts_smartcall GROUP BY org_id, agent_username, call_date ORDER BY org_id, agent_username, call_date;")
+                        calls_per_agent_per_org_df = utilities.sql_read_query_df("SELECT org_id, agent_username, call_date, COUNT(*) AS num_calls FROM contacts_smartcall_2 GROUP BY org_id, agent_username, call_date ORDER BY org_id, agent_username, call_date;")
                     
                         st.write( calls_per_agent_per_org_df )
                 
                 #.... User creation .....
                 
-                st.subheader('User Creation', divider='orange')
+                st.subheader(':green[User Creation]', divider='orange')
                 
                 col120, col121, col122, col123, col124 = st.columns([2, 2, 2, 2, 1])
                 
@@ -392,7 +444,7 @@ def main():
                                 'role': [new_role],
                                 'status': 'active',
                                 'max_active_agents': 5,
-                                'data_retention_days': 15
+                                'data_retention_days': 10
                             }
                         
                             # Create a DataFrame
@@ -409,11 +461,12 @@ def main():
                             else:
                                 with Sender( host, 9009) as sender:
                                     sender.dataframe(new_user_df, table_name='credentials_smartcall')
+                                    
                                 st.success( 'New user created successfully !' )
                 
                 #.... Configure Organization Admin .....
                 
-                st.subheader('Configure Organization', divider='orange')
+                st.subheader(':green[Configure Organization]', divider='orange')
                             
                 col125, col126, col127, col128 = st.columns([2, 2, 2, 1])
                                         
@@ -435,9 +488,9 @@ def main():
                             utilities.execute_sql_query( f"UPDATE credentials_smartcall SET max_active_agents = {max_active_agents}, data_retention_days = {retention_days} WHERE combination = '{org_combination}'" )
                             st.success('Configuration updated successfully !')
                 
-                # Logic to enable or disable agent
+                # Logic to enable or disable organization_admin
                 
-                st.subheader('Enable/Disable Organization', divider='orange')
+                st.subheader(':green[Enable/Disable Organization]', divider='orange')
                 
                 col129, col130, col131 = st.columns([2, 2, 1])
                 
@@ -461,14 +514,13 @@ def main():
                            
                         st.success( 'Organization status updated !' )
                         
-                st.subheader('Credentials Table', divider='orange')
-                                
-                credentials_df = utilities.sql_read_query_df("select * from credentials_smartcall")
-                
-                if st.button( 'Refresh Credentials Table' ):
+                st.subheader(':green[Credentials Table]', divider='orange')
+                                               
+                if st.button( 'Display Credentials Table' ):
+                    
                     credentials_df = utilities.sql_read_query_df("select * from credentials_smartcall")
                     
-                st.write( credentials_df )
+                    st.write( credentials_df )
                     
             elif state.role == 'agent':
                             
@@ -541,7 +593,7 @@ def main():
                         
                         if len( st.session_state.cust_info_df ) > 0:
                                                         
-                            call_update_status_query = f"UPDATE contacts_smartcall SET call_status = 'complete', action = '{st.session_state.call_feedback}' WHERE id = '{st.session_state.cust_info_df.id[0]}' AND org_id = '{st.session_state.org_id}'"
+                            call_update_status_query = f"UPDATE contacts_smartcall_2 SET call_status = 'complete', call_action = '{st.session_state.call_feedback}' WHERE id = '{st.session_state.cust_info_df.id[0]}' AND org_id = '{st.session_state.org_id}'"
                             
                             utilities.execute_sql_query(call_update_status_query)
                             
@@ -570,17 +622,15 @@ def main():
                 
                 if display_agent_metrics:
                     
-                    current_date = datetime.now().date()
-                    
-                    current_date_str = current_date.strftime('%Y-%m-%d')
-                    
+                    current_date = date.today()
+                                        
                     seven_days_ago = current_date - timedelta(days=7)
                                     
                     with col202:
                                         
-                        todays_agent_stats_df = utilities.sql_read_query_df( f"SELECT action, COUNT(*) AS num_calls FROM contacts_smartcall WHERE agent_username = '{st.session_state.username}' AND org_id = '{st.session_state.org_id}' AND call_date = '{current_date_str}' GROUP BY action;" )
+                        todays_agent_stats_df = utilities.sql_read_query_df( f"SELECT call_action, COUNT(*) AS num_calls FROM contacts_smartcall_2 WHERE agent_username = '{st.session_state.username}' AND org_id = '{st.session_state.org_id}' AND call_date = '{current_date}' GROUP BY call_action;" )
                                             
-                        fig = px.bar(todays_agent_stats_df, x='action', y='num_calls', title = "Today's Distribution of calls by Feedback" )
+                        fig = px.bar(todays_agent_stats_df, x='call_action', y='num_calls', title = "Today's Distribution of calls by Feedback" )
                                     
                         st.plotly_chart(fig)
                         
@@ -589,7 +639,7 @@ def main():
                         
                     with col204:
                         
-                        agent_call_freq_df = utilities.sql_read_query_df( f"SELECT call_date, COUNT(*) AS num_calls FROM contacts_smartcall WHERE agent_username = '{st.session_state.username}' AND org_id = '{st.session_state.org_id}' AND timestamp >= '{seven_days_ago}' AND timestamp <= '{current_date} 23:59:59' GROUP BY call_date;" )
+                        agent_call_freq_df = utilities.sql_read_query_df( f"SELECT call_date, COUNT(*) AS num_calls FROM contacts_smartcall_2 WHERE agent_username = '{st.session_state.username}' AND org_id = '{st.session_state.org_id}' AND timestamp >= '{seven_days_ago}' AND timestamp <= '{current_date} 23:59:59' GROUP BY call_date;" )
                         
                                         
                         fig2 = px.line(agent_call_freq_df, x="call_date", y="num_calls", title='Calls Frequency for Last 7 Days', markers = True )
@@ -599,7 +649,7 @@ def main():
             elif state.role == 'referral':
                 pass
     else:
-        st.subheader("Login")
+        st.subheader(":green[Login]")
         # Display login form
         st.text_input(
             "Organization ID:", value=state.org_id, key='org_id_input',

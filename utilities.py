@@ -97,7 +97,7 @@ def generate_unique_id( length ):
 
 def get_number_to_call( org_id ):
    
-    num_to_call_results = sql_read_query_df(f"""SELECT id, contact, customer_name, customer_email, customer_address, customer_domain FROM contacts_smartcall WHERE org_id = '{org_id}' AND call_status='pending' AND agent_username IS NULL LIMIT 1""")
+    num_to_call_results = sql_read_query_df(f"""SELECT id, contact, customer_name, customer_email, customer_address, customer_domain FROM contacts_smartcall_2 WHERE org_id = '{org_id}' AND call_status='pending' AND file_status = 'active' AND agent_username IS NULL LIMIT 1""")
                
     if num_to_call_results is not None:
         
@@ -128,7 +128,7 @@ def next_iteration( org_id, agent_username ):
         
         # Update agent information to avoid multiple agents calling the same number
         
-        agent_update_query = f"UPDATE contacts_smartcall SET agent_username = '{agent_username}', called_datetime = '{called_datetime}', call_date = '{call_date}' WHERE id = '{cust_info_df_fetched.id[0]}' AND org_id = '{org_id}'"
+        agent_update_query = f"UPDATE contacts_smartcall_2 SET agent_username = '{agent_username}', called_datetime = '{called_datetime}', call_date = '{call_date}', call_status = 'ongoing' WHERE id = '{cust_info_df_fetched.id[0]}' AND org_id = '{org_id}'"
             
         execute_sql_query(agent_update_query)
         
