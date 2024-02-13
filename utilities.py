@@ -42,7 +42,7 @@ def sql_read_query_df( query ):
     
     return df
 
-#@st.cache_data(max_entries=50, show_spinner='Loading ...')
+@st.cache_data(max_entries=50, show_spinner='Loading ...')
 def sql_read_query_df_cached( query ):
     conn, cursor = connect_questdb()
     
@@ -78,7 +78,7 @@ def fetchone_sql_query( fetch_one_query ):
 def valid_user( combination ):
     
     value_0 = fetchone_sql_query( f""" SELECT 1 FROM credentials_smartcall WHERE combination = '{combination}' """ )
-    
+     
     value = True if value_0 else False
     
     return value

@@ -225,7 +225,7 @@ def main():
                 st.subheader(':green[Mark file status]', divider='orange')
                 
                 col04_1, col04_2, col04_3 = st.columns([2, 2, 1])
-                
+                                
                 if upload_file_button:
                 
                     contacts_smartcall2_df = utilities.sql_read_query_df(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
@@ -300,9 +300,11 @@ def main():
                             
                             org_max_agents = org_max_agents_df['max_active_agents'].iloc[0]
                             
-                            num_agents = utilities.sql_read_query_df(f"select COUNT(*) from credentials_smartcall where role = 'agent' AND stauts = 'active' AND org_id = '{state.org_id}'")
+                            num_agents_df = utilities.sql_read_query_df(f"select COUNT(*) from credentials_smartcall where role = 'agent' AND status = 'active' AND org_id = '{state.org_id}'")
                             
-                            if num_agents == org_max_agents:
+                            num_agents = num_agents_df['count'].iloc[0]
+                                                        
+                            if int( num_agents ) == int( org_max_agents ):
                                 st.markdown("<p style='color: red;'>Maximum active agents limit is reached. Subscribe for more active agents addition.</p>", unsafe_allow_html=True)
                             else:
                             
@@ -413,20 +415,26 @@ def main():
                     data_deletion_date = ( date.today() - timedelta( days = 10 ) ).strftime( '%Y-%m-%d' )
                     
                     utilities.execute_sql_query( f"ALTER TABLE contacts_smartcall_2 DROP PARTITION WHERE timestamp < to_timestamp( '{data_deletion_date}', 'yyyy-MM-dd');" )
-                
+                    
+                    org_info = utilities.sql_read_query_df("SELECT name, org_id FROM credentials_smartcall WHERE role = 'organization_admin';")
+                                                                            
                     with col120_0:
                         st.subheader(':green[Agents per org]', divider='orange')
                                             
-                        agents_per_org_df = utilities.sql_read_query_df("SELECT org_id, status, COUNT(*) AS num_agents FROM credentials_smartcall WHERE role = 'agent' GROUP BY org_id, status ORDER BY org_id, status;")
+                        agents_per_org_df_0 = utilities.sql_read_query_df("SELECT org_id, status, COUNT(*) AS num_agents FROM credentials_smartcall WHERE role = 'agent' GROUP BY org_id, status ORDER BY org_id, status;")
+                        
+                        agents_per_org_df = pd.merge( agents_per_org_df_0, org_info, on = 'org_id', how = 'left' )
                     
-                        st.write( agents_per_org_df )
+                        st.write( agents_per_org_df[ [ 'name', 'org_id', 'status', 'num_agents' ] ] )
                         
                     with col120_1:
                         st.subheader(':green[Calls per agent per org]', divider='orange')
                         
-                        calls_per_agent_per_org_df = utilities.sql_read_query_df("SELECT org_id, agent_username, call_date, COUNT(*) AS num_calls FROM contacts_smartcall_2 GROUP BY org_id, agent_username, call_date ORDER BY org_id, agent_username, call_date;")
+                        calls_per_agent_per_org_df_0 = utilities.sql_read_query_df("SELECT org_id, agent_username, call_status, call_date, COUNT(*) AS num_calls FROM contacts_smartcall_2 GROUP BY org_id, agent_username, call_date, call_status ORDER BY org_id, agent_username, call_date, call_status;")
+                        
+                        calls_per_agent_per_org_df = pd.merge( calls_per_agent_per_org_df_0, org_info, on = 'org_id', how = 'left' )
                     
-                        st.write( calls_per_agent_per_org_df )
+                        st.write( calls_per_agent_per_org_df[ [ 'name', 'org_id', 'call_date', 'agent_username', 'call_status', 'num_calls' ] ] )
                 
                 #.... User creation .....
                 
@@ -455,8 +463,8 @@ def main():
                                 'password': [new_password],
                                 'role': [new_role],
                                 'status': 'active',
-                                'max_active_agents': 5,
-                                'data_retention_days': 10
+                                'max_active_agents': '5',
+                                'data_retention_days': '10'
                             }
                         
                             # Create a DataFrame
@@ -467,6 +475,10 @@ def main():
                             new_user_combination = f"{new_username}__{new_password}__{new_user_df.org_id[0]}"
                                                    
                             new_user_df['combination'] = new_user_combination
+                            
+                            print( new_user_df )
+                            
+                            new_user_df.to_csv('new_user_df.csv', index=False)
                                                                                             
                             if utilities.valid_user( new_user_combination ):
                                 st.error('This username and password combination already exists.')
@@ -497,7 +509,7 @@ def main():
                         if not ( org_combination and max_active_agents and retention_days ):
                             st.markdown("<p style='color: red;'>Please provide all inputs.</p>", unsafe_allow_html=True)
                         else:
-                            utilities.execute_sql_query( f"UPDATE credentials_smartcall SET max_active_agents = {max_active_agents}, data_retention_days = {retention_days} WHERE combination = '{org_combination}'" )
+                            utilities.execute_sql_query( f"UPDATE credentials_smartcall SET max_active_agents = '{max_active_agents}', data_retention_days = '{retention_days}' WHERE combination = '{org_combination}'" )
                             st.success('Configuration updated successfully !')
                 
                 # Logic to enable or disable organization_admin
