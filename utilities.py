@@ -83,7 +83,7 @@ def valid_user( combination ):
     
     return value
     
-@st.cache_data( ttl='2hr', show_spinner='Loading ...')
+#@st.cache_data( ttl='2hr', show_spinner='Loading ...')
 def login(username, password, org_id):
    
     combined_credentials = f"{username}__{password}__{org_id}"
