@@ -248,6 +248,8 @@ def main():
                             st.markdown("<p style='color: red;'>Please provide all inputs.</p>", unsafe_allow_html=True)
                         else:
                             utilities.execute_sql_query( f"UPDATE contacts_smartcall_2 SET file_status = '{selected_file_status}' WHERE file_id = '{selected_file_id}'" )
+                            
+                            print( f"UPDATE contacts_smartcall_2 SET file_status = '{selected_file_status}' WHERE file_id = '{selected_file_id}'" )
                            
                         st.success( 'File status updated !' )
                 
@@ -255,19 +257,19 @@ def main():
                 
                 st.subheader(':green[Files Info]', divider='orange')
                 
-                files_info_df = utilities.sql_read_query_df( f"""SELECT file_id, file_status,
-                                                            
-                       COUNT(*) AS total_records,
-                       
-                       SUM(CASE WHEN call_status = 'pending' THEN 1 ELSE 0 END) AS calls_pending,
-                       
-                       SUM(CASE WHEN call_status = 'ongoing' THEN 1 ELSE 0 END) AS calls_ongoing,
-                       
-                       SUM(CASE WHEN call_status = 'complete' THEN 1 ELSE 0 END) AS calls_complete
-                       
-                FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY file_id, file_status;""" )
-                
                 if st.button("Display Files Info"):
+                    
+                    files_info_df = utilities.sql_read_query_df( f"""SELECT file_id, file_status,
+                                                                
+                           COUNT(*) AS total_records,
+                           
+                           SUM(CASE WHEN call_status = 'pending' THEN 1 ELSE 0 END) AS calls_pending,
+                           
+                           SUM(CASE WHEN call_status = 'ongoing' THEN 1 ELSE 0 END) AS calls_ongoing,
+                           
+                           SUM(CASE WHEN call_status = 'complete' THEN 1 ELSE 0 END) AS calls_complete
+                           
+                    FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY file_id, file_status;""" )
                     
                     st.write( files_info_df )
                 
