@@ -137,11 +137,11 @@ def next_iteration( org_id, agent_username ):
         skype_uri = 'No number to call'
         
     else:
-        current_datetime = datetime.now()
+        current_datetime = datetime.datetime.now()
         
         called_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")
         
-        call_date = datetime.strptime(called_datetime, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y-%m-%d")
+        call_date = datetime.datetime.strptime(called_datetime, "%Y-%m-%d %H:%M:%S.%f").strftime("%Y-%m-%d")
         
         # Update agent information to avoid multiple agents calling the same number
         
