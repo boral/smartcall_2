@@ -7,6 +7,7 @@ import logzero
 import plotly.express as px
 from datetime import datetime, timedelta, date
 import time
+import datetime
 
 
 # ef5d909f
@@ -20,6 +21,8 @@ logzero.logfile("log.log")
 st.set_page_config(layout="wide")
 
 host = "13.126.180.220"
+
+conf = "http::addr=13.126.180.220:9000;"
 
 # State management -----------------------------------------------------------
 
@@ -203,7 +206,7 @@ def main():
                             insert_df['customer_domain'] = ''
                         
                         
-                        insert_df['file_id'] = state.org_id + '_' + str( datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
+                        insert_df['file_id'] = state.org_id + '_' + str( datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
                         
                         insert_df['file_status'] = 'active'   #... By default data is active
                                                 
@@ -212,11 +215,13 @@ def main():
                         insert_df['call_status'] = 'pending'
                                                 
                         insert_df['id'] = [ str(uuid.uuid4()) for _ in range(len(uploaded_df)) ]
+
+                        insert_df['timestamp'] = utilities.generate_timestamps(length=len(insert_df), increment=datetime.timedelta(milliseconds=100))
                                                                                             
                         #.. Insert uploaded data to database      
-                        with Sender(host, 9009) as sender:
+                        with Sender.from_conf(conf) as sender:
                             
-                            sender.dataframe(insert_df, table_name='contacts_smartcall_2')
+                            sender.dataframe(insert_df, table_name='contacts_smartcall_2', at='timestamp')
                             
                         st.success('Data uploaded successfully!')
                 
@@ -248,8 +253,6 @@ def main():
                             st.markdown("<p style='color: red;'>Please provide all inputs.</p>", unsafe_allow_html=True)
                         else:
                             utilities.execute_sql_query( f"UPDATE contacts_smartcall_2 SET file_status = '{selected_file_status}' WHERE file_id = '{selected_file_id}'" )
-                            
-                            print( f"UPDATE contacts_smartcall_2 SET file_status = '{selected_file_status}' WHERE file_id = '{selected_file_id}'" )
                            
                         st.success( 'File status updated !' )
                 
@@ -257,19 +260,19 @@ def main():
                 
                 st.subheader(':green[Files Info]', divider='orange')
                 
+                files_info_df = utilities.sql_read_query_df( f"""SELECT file_id, file_status,
+                                                            
+                       COUNT(*) AS total_records,
+                       
+                       SUM(CASE WHEN call_status = 'pending' THEN 1 ELSE 0 END) AS calls_pending,
+                       
+                       SUM(CASE WHEN call_status = 'ongoing' THEN 1 ELSE 0 END) AS calls_ongoing,
+                       
+                       SUM(CASE WHEN call_status = 'complete' THEN 1 ELSE 0 END) AS calls_complete
+                       
+                FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY file_id, file_status;""" )
+                
                 if st.button("Display Files Info"):
-                    
-                    files_info_df = utilities.sql_read_query_df( f"""SELECT file_id, file_status,
-                                                                
-                           COUNT(*) AS total_records,
-                           
-                           SUM(CASE WHEN call_status = 'pending' THEN 1 ELSE 0 END) AS calls_pending,
-                           
-                           SUM(CASE WHEN call_status = 'ongoing' THEN 1 ELSE 0 END) AS calls_ongoing,
-                           
-                           SUM(CASE WHEN call_status = 'complete' THEN 1 ELSE 0 END) AS calls_complete
-                           
-                    FROM contacts_smartcall_2 WHERE org_id = '{state.org_id}' GROUP BY file_id, file_status;""" )
                     
                     st.write( files_info_df )
                 
@@ -338,13 +341,12 @@ def main():
                 
                 st.subheader(':green[Configure agent]', divider='orange')
                 
-                col8, col9, col10 = st.columns([2, 2, 2])
+                col8, col9, col9_1, col10 = st.columns([2, 2, 2, 2])
                 
-                if create_new_agent_button:
+                #if create_new_agent_button:
                 
-                    org_agents_df = utilities.sql_read_query_df(f"select combination from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
-                else:
-                    org_agents_df = utilities.sql_read_query_df_cached(f"select combination from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
+                org_agents_df = utilities.sql_read_query_df(f"select combination from credentials_smartcall where role = 'agent' AND org_id = '{state.org_id}'")
+                
                 
                 # unique_groups_list_0 = list( org_agents_df.grouping.unique() )
                 
@@ -356,17 +358,30 @@ def main():
                 with col9:
                     agent_new_status = st.selectbox("Status", ['active', 'inactive'], key = 'agent_new_status', index = None )
                 
+                with col9_1:
+                    agent_reset_password = st.text_input("Reset Password (Optional)", key = 'reset_agent_password', max_chars = 100 )
+                
+                
                 with col10:
                     st.write('')
                     st.write('')
                     
-                    if st.button("Update Agent Status"):
+                    if st.button("Update Agent Info"):
                         if not ( agent_combination and agent_new_status ):
-                            st.markdown("<p style='color: red;'>Please provide all inputs.</p>", unsafe_allow_html=True)
+                            st.markdown("<p style='color: red;'>Please provide required inputs.</p>", unsafe_allow_html=True)
                         else:
+                                                                                        
                             utilities.execute_sql_query( f"UPDATE credentials_smartcall SET status = '{agent_new_status}' WHERE combination = '{agent_combination}'" )
-                           
-                        st.success( 'Agent status updated !' )
+                            
+                            if agent_reset_password != '':
+                                
+                                effective_agent_username = agent_combination.split('__')[0]
+                                
+                                new_user_combination = f"{effective_agent_username}__{agent_reset_password}__{state.org_id}"
+                                
+                                utilities.execute_sql_query( f"UPDATE credentials_smartcall SET password = '{agent_reset_password}', combination = '{new_user_combination}' WHERE combination = '{agent_combination}'" )
+                                                                                          
+                            st.success( 'Agent status updated !' )
                 
                 # Display agent table
                 

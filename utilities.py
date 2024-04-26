@@ -2,12 +2,12 @@ import psycopg2
 import uuid
 import pandas as pd
 from logzero import logger
-from datetime import datetime
 #import webbrowser
 #import time
 #import pyautogui
 import logzero
 import streamlit as st
+import datetime
 
 #call_button_image = "call_button.png"
 
@@ -32,6 +32,14 @@ def connect_questdb():
     cursor = conn.cursor()
     
     return conn, cursor
+
+def generate_timestamps(length, increment=datetime.timedelta(milliseconds=1)):
+    current_time = datetime.datetime.now()
+    timestamps = []
+    for _ in range(length):
+        timestamps.append(current_time)
+        current_time += increment
+    return timestamps
 
 def sql_read_query_df( query ):
     conn, cursor = connect_questdb()
