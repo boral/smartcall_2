@@ -206,7 +206,7 @@ def main():
                             insert_df['customer_domain'] = ''
                         
                         
-                        insert_df['file_id'] = state.org_id + '_' + str( datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
+                        insert_df['file_id'] = uploaded_file.name + '_' + state.org_id + '_' + str( datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') )
                         
                         insert_df['file_status'] = 'active'   #... By default data is active
                                                 
@@ -230,13 +230,9 @@ def main():
                 st.subheader(':green[Mark file status]', divider='orange')
                 
                 col04_1, col04_2, col04_3 = st.columns([2, 2, 1])
-                                
-                #if upload_file_button:
-                
+                                                
                 contacts_smartcall2_df = utilities.sql_read_query_df(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
-                #else:
-                    #contacts_smartcall2_df = utilities.sql_read_query_df_cached(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
-                
+                                
                 with col04_1:
                     selected_file_id = st.selectbox("File ID", set( contacts_smartcall2_df.file_id ), key = 'file_id', index = None )
                     
@@ -581,10 +577,12 @@ def main():
                 if len( st.session_state.cust_info_df ) > 0:
                                
                     url = st.session_state.cust_info_df.customer_domain[0]
+
+                    if url is not None:
                     
-                    customer_url_w_protocol = 'http://' + url if not url.startswith(('http://', 'https://')) else url
+                        customer_url_w_protocol = 'http://' + url if not url.startswith(('http://', 'https://')) else url
                     
-                    st.markdown(f"[Visit Domain]({customer_url_w_protocol})", unsafe_allow_html=True)
+                        st.markdown(f"[Visit Domain]({customer_url_w_protocol})", unsafe_allow_html=True)
                                         
                 st.subheader(':green[Operations]', divider='green')
                 
