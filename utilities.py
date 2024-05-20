@@ -126,7 +126,6 @@ def get_number_to_call( org_id ):
     return cust_info_df_fetched
 
 
-
 def next_iteration( org_id, agent_username ):
     
     cust_info_df_fetched = get_number_to_call(org_id)

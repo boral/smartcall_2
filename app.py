@@ -231,11 +231,11 @@ def main():
                 
                 col04_1, col04_2, col04_3 = st.columns([2, 2, 1])
                                 
-                if upload_file_button:
+                #if upload_file_button:
                 
-                    contacts_smartcall2_df = utilities.sql_read_query_df(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
-                else:
-                    contacts_smartcall2_df = utilities.sql_read_query_df_cached(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
+                contacts_smartcall2_df = utilities.sql_read_query_df(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
+                #else:
+                    #contacts_smartcall2_df = utilities.sql_read_query_df_cached(f"select file_id from contacts_smartcall_2 where call_status = 'pending' AND org_id = '{state.org_id}'")
                 
                 with col04_1:
                     selected_file_id = st.selectbox("File ID", set( contacts_smartcall2_df.file_id ), key = 'file_id', index = None )
@@ -319,7 +319,8 @@ def main():
                                     'password': [new_agent_password],
                                     'org_id': state.org_id,
                                     'role': 'agent',
-                                    'status': 'active'
+                                    'status': 'active',
+                                    'timestamp': utilities.generate_timestamps(length=1, increment=datetime.timedelta(milliseconds=100))
                                 }
                             
                                 # Create a DataFrame
@@ -332,9 +333,9 @@ def main():
                                 if utilities.valid_user( new_user_combination ):
                                     st.error('This username and password combination already exists.')
                                 else:
-                                    with Sender( host, 9009) as sender:
-                                        sender.dataframe(new_agent_df, table_name='credentials_smartcall')
-                                        
+                                    with Sender.from_conf(conf) as sender:
+                                        sender.dataframe(new_agent_df, table_name='credentials_smartcall', at='timestamp')
+                                                                            
                                     st.success( 'New agent created successfully !' )
                 
                 # Logic to enable or disable agent
@@ -481,7 +482,8 @@ def main():
                                 'role': [new_role],
                                 'status': 'active',
                                 'max_active_agents': '5',
-                                'data_retention_days': '10'
+                                'data_retention_days': '10',
+                                'timestamp': utilities.generate_timestamps(length=1, increment=datetime.timedelta(milliseconds=100))
                             }
                         
                             # Create a DataFrame
@@ -500,9 +502,9 @@ def main():
                             if utilities.valid_user( new_user_combination ):
                                 st.error('This username and password combination already exists.')
                             else:
-                                with Sender( host, 9009) as sender:
-                                    sender.dataframe(new_user_df, table_name='credentials_smartcall')
-                                    
+                                with Sender.from_conf(conf) as sender:
+                                    sender.dataframe(new_user_df, table_name='credentials_smartcall', at='timestamp')
+                                                                    
                                 st.success( 'New user created successfully !' )
                 
                 #.... Configure Organization Admin .....
