@@ -426,7 +426,7 @@ def main():
                     
                     #..... Drop Table Partitions ....
                     
-                    data_deletion_date = ( date.today() - timedelta( days = 10 ) ).strftime( '%Y-%m-%d' )
+                    data_deletion_date = ( date.today() - timedelta( days = 5 ) ).strftime( '%Y-%m-%d' )
                     
                     utilities.execute_sql_query( f"ALTER TABLE contacts_smartcall_2 DROP PARTITION WHERE timestamp < to_timestamp( '{data_deletion_date}', 'yyyy-MM-dd');" )
                     
